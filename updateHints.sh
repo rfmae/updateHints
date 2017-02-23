@@ -22,7 +22,7 @@ else
   grep -v "^;" $DEST/named.root.raw | sort > $DEST/named.root.new
   if [ `md5sum $DEST/named.root.new | awk {'print $1'}` != `md5sum $DEST/named.root | awk {'print $1'}` ]; then
     chown root:root $DEST/named.root.new
-    chmod 444 named.root.new
+    chmod 444 $DEST/named.root.new
     rm -f $DEST/named.root.old
     mv $DEST/named.root $DEST/named.root.old
     mv $DEST/named.root.new $DEST/named.root
