@@ -1,2 +1,2 @@
 # updateHints
-This script udates to BIND root hints file 'named.root' with OpenNICs root servers.
+This script udates the BIND root hints file 'named.root' with OpenNICs root servers.
