@@ -2,7 +2,7 @@
 
 # Script to update ISC Bind root hints using OpenNIC servers.
 #
-# 2017 rfmae <rf.mae.git@gmail.com>
+# 2017 rfmae <rfmae.git@mailbox.org>
 #
 # This simple bash script will update your bind hint file if the Tier1 servers
 # have changed. This should be run as a daily or weekly cron job.
