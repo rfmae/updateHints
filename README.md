@@ -1,2 +1,2 @@
 # updateHints
-This script replaces and updates BINDs root hints file 'named.root' using root servers from the OpenNIC project.
+This script replaces and updates unbounds root hints file using root servers from the OpenNIC project on pfsense.

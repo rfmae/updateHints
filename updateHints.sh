@@ -1,38 +1,41 @@
 #!/bin/sh
 
-# Script to update ISC Bind root hints using OpenNIC servers.
+# Script to update unbound root hints using OpenNIC servers on pfsense.
 #
-# 2017 rfmae <rfmae.git@mailbox.org>
+# 2018 rfmae <rfmae.git@mailbox.org>
 #
-# This simple bash script will update your bind hint file if the Tier1 servers
+# This simple bash script will update your root.hints file if the Tier1 servers
 # have changed. This should be run as a daily or weekly cron job.
 
-DEST=/chroot/named/var/named
-USER=named
+# Redirect stdout/stderr to a file.
+exec >> /var/log/updateHints.log 2>&1
 
-dig . NS @75.127.96.89 > $DEST/named.root.raw
+DEST=/var/unbound
+USER=unbound
 
-grep "status: NOERROR" $DEST/named.root.raw >/dev/null 2>&1
+DATE=`/bin/date +%Y%m%d-%H:%M:%S`
+
+/usr/local/bin/dig . NS @75.127.96.89 > $DEST/root.hints.raw
+
+/usr/bin/grep "status: NOERROR" $DEST/root.hints.raw >/dev/null 2>&1
 
 if [ "$?" == "1" ]; then 
-  echo "Updating of the named.root file has failed." 
-  echo "The following _discarded_ info was retrieved:"
-  cat $DEST/named.root.raw
-  rm -f $DEST/named.root.raw
+  echo "$DATE Updating of the root.hints file has failed. The following _discarded_ info was retrieved:" 
+  /bin/cat $DEST/root.hints.raw
+  /bin/rm -f $DEST/root.hints.raw
 else
-  grep -v "^;" $DEST/named.root.raw | sort > $DEST/named.root.new
-  if [ `md5sum $DEST/named.root.new | awk {'print $1'}` != `md5sum $DEST/named.root | awk {'print $1'}` ]; then
-    chown $USER:$USER $DEST/named.root.new
-    chmod 444 $DEST/named.root.new
-    rm -f $DEST/named.root.old
-    mv $DEST/named.root $DEST/named.root.old
-    mv $DEST/named.root.new $DEST/named.root
-    /etc/rc.d/rc.bind restart
-    rm -f $DEST/named.root.raw
+  /usr/bin/grep -v "^;" $DEST/root.hints.raw | /usr/bin/sort > $DEST/root.hints.new
+  if [ `/sbin/md5 $DEST/root.hints.new | /usr/bin/awk '{print $4}'` != `/sbin/md5 $DEST/root.hints | /usr/bin/awk '{print $4}'` ]; then
+    echo "$DATE The OpenNIC tier one servers changed. Updating the root.hints file."
+    /usr/sbin/chown $USER:$USER $DEST/root.hints.new
+    /bin/chmod 444 $DEST/root.hints.new
+    /bin/rm -f $DEST/root.hints.old
+    /bin/mv $DEST/root.hints $DEST/root.hints.old
+    /bin/mv $DEST/root.hints.new $DEST/root.hints
+    /usr/local/sbin/pfSsh.php playback svc restart unbound
+    /bin/rm -f $DEST/root.hints.raw
   else
-    echo "The OpenNIC root servers did not change since the"
-    echo "last update. Keeping the old named.root file."
-    rm -f $DEST/named.root.new $DEST/named.root.raw
+    echo "$DATE The OpenNIC root servers did not change since the last update. Keeping the old root.hints file."
+    /bin/rm -f $DEST/root.hints.new $DEST/root.hints.raw
   fi
 fi
-
